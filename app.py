@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from engine.scoring import calculate_business_health
 from engine.recommendations import generate_recommendations
+from engine.explain import generate_explanation
 
 # -------------------------------
 # PAGE CONFIG
@@ -71,6 +72,22 @@ def recommendation_card(text):
     )
 
 
+def explanation_box(text):
+    st.markdown(
+        f"""
+        <div style="
+            padding:15px;
+            border-radius:10px;
+            background-color:#eef2f7;
+            border-left:5px solid #2b6cb0;
+            line-height:1.6;">
+            {text}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
 # -------------------------------
 # UI - TITLE
 # -------------------------------
@@ -115,7 +132,7 @@ with col1:
     st.dataframe(df_summary, use_container_width=True)
 
 # -------------------------------
-# RESULTS + RECOMMENDATIONS
+# RESULTS + INSIGHTS
 # -------------------------------
 with col2:
     st.subheader("📈 Results")
@@ -138,10 +155,10 @@ with col2:
             "debt": debt
         }
 
-        # Get scores
+        # Scores
         results = calculate_business_health(engine_input)
 
-        # BIG Health Score
+        # Health Score
         st.markdown("#### ⭐ Overall Health Score")
         colored_metric("Health Score", results["health_score"])
 
@@ -158,7 +175,7 @@ with col2:
             colored_metric("Growth", results["growth_score"])
 
         # -------------------------------
-        # RECOMMENDATIONS SECTION
+        # RECOMMENDATIONS
         # -------------------------------
         st.markdown("### 📌 Recommendations")
 
@@ -166,6 +183,14 @@ with col2:
 
         for rec in recommendations:
             recommendation_card(f"✔ {rec}")
+
+        # -------------------------------
+        # EXPLANATION
+        # -------------------------------
+        st.markdown("### 🧾 Explanation")
+
+        explanation = generate_explanation(engine_input, results)
+        explanation_box(explanation)
 
         st.success("Analysis complete ✅")
 
