@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from engine.scoring import calculate_business_health
+from engine.recommendations import generate_recommendations
 
 # -------------------------------
 # PAGE CONFIG
@@ -41,13 +42,29 @@ def colored_metric(label, value):
     st.markdown(
         f"""
         <div style="
-            padding:10px;
-            border-radius:10px;
+            padding:12px;
+            border-radius:12px;
             background-color:{color};
             color:white;
             text-align:center;
             font-weight:bold;">
             {label}<br>{value}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def recommendation_card(text):
+    st.markdown(
+        f"""
+        <div style="
+            padding:12px;
+            border-radius:10px;
+            background-color:#f5f5f5;
+            border-left:5px solid #4CAF50;
+            margin-bottom:8px;">
+            {text}
         </div>
         """,
         unsafe_allow_html=True
@@ -98,7 +115,7 @@ with col1:
     st.dataframe(df_summary, use_container_width=True)
 
 # -------------------------------
-# RESULTS SECTION
+# RESULTS + RECOMMENDATIONS
 # -------------------------------
 with col2:
     st.subheader("📈 Results")
@@ -113,7 +130,7 @@ with col2:
 
         st.markdown("### 🧠 Business Health Analysis")
 
-        # Prepare data for engine
+        # Engine input
         engine_input = {
             "revenue": revenue,
             "expenses": expenses,
@@ -121,14 +138,15 @@ with col2:
             "debt": debt
         }
 
+        # Get scores
         results = calculate_business_health(engine_input)
 
         # BIG Health Score
         st.markdown("#### ⭐ Overall Health Score")
         colored_metric("Health Score", results["health_score"])
 
+        # Component Scores
         st.markdown("#### 📊 Component Scores")
-
         c1, c2 = st.columns(2)
 
         with c1:
@@ -138,6 +156,16 @@ with col2:
         with c2:
             colored_metric("Debt", results["debt_score"])
             colored_metric("Growth", results["growth_score"])
+
+        # -------------------------------
+        # RECOMMENDATIONS SECTION
+        # -------------------------------
+        st.markdown("### 📌 Recommendations")
+
+        recommendations = generate_recommendations(engine_input, results)
+
+        for rec in recommendations:
+            recommendation_card(f"✔ {rec}")
 
         st.success("Analysis complete ✅")
 
